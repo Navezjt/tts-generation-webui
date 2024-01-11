@@ -17,9 +17,10 @@ Google Colab demo: [![Open In Colab](https://colab.research.google.com/assets/co
 
 ## Screenshots
 
-|      ![musicgen](./screenshots/v2/musicgen.png)       |    ![rvc](./screenshots/v2/rvc.png)     | ![history](./screenshots/v2/history.jpg) |
-| :---------------------------------------------------: | :---------------------------------------------------: | :--------------------------------------: |
-| ![Screenshot 1](<./screenshots/screenshot%20(1).png>) | ![Screenshot 5](<./screenshots/screenshot%20(5).png>) | ![cloning](./screenshots/v2/cloning.png) |
+|  ![react](./screenshots/v2/react.png)  | ![musicgen](./screenshots/v2/musicgen.png) | ![rvc](./screenshots/v2/rvc.png) |
+| :-----------------------------------------: | :-----------------------------------------: | :-------------------------------: |
+| ![history](./screenshots/v2/history.jpg) | ![Screenshot 1](<./screenshots/screenshot%20(1).png>) | ![Screenshot 5](<./screenshots/screenshot%20(5).png>) |
+
 
 ## Examples
 
@@ -36,7 +37,28 @@ https://rsxdalv.github.io/bark-speaker-directory/
 ## Bark Readme
 [README_Bark.md](./README_Bark.md)
 
+## Info about managing models, caches and system space for AI projects
+https://github.com/rsxdalv/tts-generation-webui/discussions/186#discussioncomment-7291274
+
 ## Changelog
+Jan 11:
+* React UI: Make the build work without any errors
+
+Jan 9:
+* React UI
+  * Fix 404 handler for Wavesurfer
+  * Group Bark tabs together
+
+Jan 8:
+* Release React UI
+
+Oct 26:
+* Improve model selection UX for Musicgen
+
+Oct 24:
+* Add initial React UI for Musicgen and Demucs (https://github.com/rsxdalv/tts-generation-webui/pull/202)
+* Fix Bark long generation seed drifting (thanks to https://github.com/520Pig520)
+
 Sep 21:
 * Bark: Add continue as semantic history button
 * Switch to github docker image storage, new docker image:
@@ -248,6 +270,14 @@ Not exactly, the dependencies clash, especially between conda and python (and de
 * run using `(venv) python server.py`
 
 * Potentially needed to install build tools (without Visual Studio): https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
+### React UI
+
+* Install nodejs (if not already installed with conda)
+* Install react dependencies: `npm install`
+* Build react: `npm run build`
+* Run react: `npm start`
+* Also run the python server: `python server.py` or with `start_(platform)` script
 
 ## Docker Setup
 
