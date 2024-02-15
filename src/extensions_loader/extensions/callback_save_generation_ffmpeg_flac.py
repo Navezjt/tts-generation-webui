@@ -1,9 +1,13 @@
+# from bark.FullGeneration import FullGeneration
 import numpy as np
 import json
 from typing import Any, Dict, List
+from bark.generation import SAMPLE_RATE
 
 import subprocess
 import ffmpeg
+
+import base64
 
 
 def check_ffmpeg():
@@ -13,25 +17,46 @@ def check_ffmpeg():
         )
 
 
-def callback_save_generation_musicgen(
+def ndarray_to_base64(arr):
+    # Convert ndarray to bytes
+    arr_bytes = arr.tobytes()
+    # Encode bytes to base64
+    return base64.b64encode(arr_bytes).decode("utf-8")
+
+
+def decode_base64_to_ndarray(base64_string):
+    # Decode base64 string to bytes
+    decoded_bytes = base64.b64decode(base64_string)
+    # Convert bytes to NumPy ndarray
+    return np.frombuffer(decoded_bytes, dtype=np.int16)
+
+
+def callback_save_generation(
+    # full_generation: FullGeneration,
+    full_generation: Any,
     audio_array: np.ndarray,
     files: Dict[str, str],
     metadata: Dict[str, Any],
-    SAMPLE_RATE: int,
 ) -> None:
     check_ffmpeg()
-    print("Saving generation to", files.get("ogg"))
+    filename = files.get("wav").replace(".wav", ".flac")
+    print("Saving generation to", filename)
 
-    filename = files.get("ogg")
+    attach_generation_meta(full_generation, "semantic_prompt", metadata)
+    attach_generation_meta(full_generation, "coarse_prompt", metadata)
     input_data = audio_array.tobytes()
     metadata["prompt"] = double_escape_quotes(metadata["prompt"])
     metadata["prompt"] = double_escape_newlines(metadata["prompt"])
+    def double_escape_backslash(prompt):
+        if prompt is None:
+            return None
+        return prompt.replace("\\", "\\\\")
+    metadata["history_prompt"] = double_escape_backslash(metadata["history_prompt"])
+    metadata["history_prompt_npz"] = double_escape_backslash(metadata["history_prompt_npz"])
     metadata_str = json.dumps(metadata, ensure_ascii=False)
 
-    channels = audio_array.shape[1] if len(audio_array.shape) > 1 else 1
-    pipe_input = ffmpeg.input("pipe:", format="f32le", ar=str(SAMPLE_RATE), ac=channels)
-    # TODO: test with Tempfile
-    metadata_filename = files.get("ogg") + ".ffmetadata.ini"  # type: ignore
+    pipe_input = ffmpeg.input("pipe:", format="f32le", ar=str(SAMPLE_RATE))
+    metadata_filename = filename + ".ffmetadata.ini"  # type: ignore
     with open(metadata_filename, "w", encoding="utf-8") as f:
         f.write(
             f""";FFMETADATA1
@@ -46,7 +71,7 @@ comment={metadata_str}
             pipe_input,
             metadata_input,
             filename,
-            format="ogg",
+            format="flac",
             map_metadata=f"1",
             loglevel="error",
         )
@@ -74,9 +99,9 @@ comment={metadata_str}
     # print(p.returncode)
     # Show if success
     if p.returncode == 0:
-        print("Saved generation to", files.get("ogg"))
+        print("Saved generation to", filename)
     else:
-        print("Failed to save generation to", files.get("ogg"))
+        print("Failed to save generation to", filename)
         print("ffmpeg args:", args)
         print(output_data[0])
         # print(output_data[1])
@@ -92,11 +117,22 @@ def double_escape_quotes(prompt):
     return prompt.replace('"', '\\"')
 
 
+def attach_generation_meta(full_generation, arg1, metadata):
+    semantic_prompt: np.ndarray = full_generation[arg1]
+    semantic_prompt_base64 = ndarray_to_base64(semantic_prompt)
+    metadata[arg1] = semantic_prompt_base64
+
+
 if __name__ == "__main__":
+    from bark.generation import load_codec_model, codec_decode
+
+    load_codec_model(use_gpu=True, force_reload=False)
+    args_input = "./temp/ogg-vs-npz/audio__bark__None__2023-05-29_10-12-46.npz"
     wav_input = "./temp/ogg-vs-npz/audio__bark__None__2023-05-29_10-12-46.wav"
     args_output = "./temp/ogg-vs-npz/audio__bark__None__2023-05-29_10-12-46.ogg"
 
-    audio_array = np.load(wav_input)
+    full_generation = np.load(args_input, allow_pickle=True)
+    audio_array = codec_decode(full_generation["fine_prompt"].astype(np.int64))
 
     metadata = {
         "_version": "0.0.1",
@@ -105,7 +141,8 @@ if __name__ == "__main__":
         "is_big_semantic_model": False,
         "is_big_coarse_model": False,
         "is_big_fine_model": True,
-        "prompt": "♪ これはテストです。",
+        "prompt": """♪ これはテストです。
+        "This is a test.""",
         "language": None,
         "speaker_id": None,
         "hash": "04d5509a7fd1fabda167e219812ee617",
@@ -118,8 +155,8 @@ if __name__ == "__main__":
         "seed": "1542369587",
     }
 
-    callback_save_generation_musicgen(
-        audio_array, {"ogg": args_output}, metadata, SAMPLE_RATE=22050
+    callback_save_generation(
+        full_generation, audio_array, {"flac": args_output}, metadata
     )
 
     b = ffmpeg.probe(args_output)
