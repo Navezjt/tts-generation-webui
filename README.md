@@ -1,4 +1,4 @@
-# TTS Generation WebUI (Bark, MusicGen + AudioGen, Tortoise, RVC, Vocos, Demucs)
+# TTS Generation WebUI (Bark, MusicGen + AudioGen, Tortoise, RVC, Vocos, Demucs, SeamlessM4T, MAGNeT)
 
 ## One click installers
 
@@ -41,6 +41,41 @@ https://rsxdalv.github.io/bark-speaker-directory/
 https://github.com/rsxdalv/tts-generation-webui/discussions/186#discussioncomment-7291274
 
 ## Changelog
+Feb 8:
+* Fix MultiBandDiffusion for MusicGen's stereo models, thank you https://github.com/mykeehu
+* Fix Node.js installation steps on Google Colab, code by https://github.com/miaohf
+
+Feb 6:
+* Add FLAC file generation extension by https://github.com/JoaCHIP
+
+Jan 21:
+* Add CPU/M1 torch auto-repair script with each update. To disable, edit check_cuda.py and change FORCE_NO_REPAIR = True
+
+Jan 16:
+* Upgrade MusicGen, adding support for stereo and large melody models
+* Add MAGNeT
+
+Jan 15:
+* Upgraded Gradio to 3.48.0
+  * Several visual bugs have appeared, if they are critical, please report them or downgrade gradio.
+  * Gradio: Suppress useless warnings
+* Supress Triton warnings
+* Gradio-Bark: Fix "Use last generation as history" behavior, empty selection no longer errors
+* Improve extensions loader display
+* Upgrade transformers to 4.36.1 from 4.31.0
+* Add SeamlessM4T Demo
+
+Jan 14:
+* React UI: Fix missing directory errors
+
+Jan 13:
+* React UI: Fix missing npm build step from automatic install
+
+Jan 12:
+* React UI: Fix names for audio actions
+* Gradio: Fix multiple API warnings
+* Integration - React UI now is launched alongside Gradio, with a link to open it
+
 Jan 11:
 * React UI: Make the build work without any errors
 
@@ -369,6 +404,21 @@ Most notably:
 - AudioGen: CC BY-NC 4.0
 
 
+## Compatibility / Errors
+
+Audiocraft is currently only compatible with Linux and Windows. MacOS support still has not arrived, although it might be possible to install manually.
+
+### Torch being reinstalled
+
+Due to the python package manager (pip) limitations, torch can get reinstalled several times. This is a wide ranging issue of pip and torch.
+
+### Red messages in console
+These messages:
+```
+---- requires ----, but you have ---- which is incompatible.
+```
+Are completely normal. It's both a limitation of pip and because this Web UI combines a lot of different AI projects together. Since the projects are not always compatible with each other, they will complain about the other projects being installed. This is normal and expected. And in the end, despite the warnings/errors the projects will work together.
+It's not clear if this situation will ever be resolvable, but that is the hope.
 
 ## Configuration Guide
 
